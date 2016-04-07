@@ -1,1 +1,7 @@
-This is the home page after logging in.
+<h1>
+    <% if current_user %>
+        Signed in as <%= current_user.name %> | <%= link_to "Logout", '/auth/logout' %>
+    <% else %>
+        <%= link_to 'Login', '/auth/login' %> | <%= link_to 'Signup', '/signup' %>
+    <% end %>
+</h1>

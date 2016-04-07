@@ -28,19 +28,4 @@ $(document).ready(function() {
       */
     $.backstretch('/assets/background.jpg');
 
-
-    /*
-     |--------------------------------------------------------------------------
-     | Fade In Effect on Page Load
-     |--------------------------------------------------------------------------
-     |
-     | Fade any application page in once it is fully loaded.
-     |
-     */
-    $(document.body).on("backstretch.show", function() {
-        $(document.body).css({
-            opacity: 1
-        });
-    });
-
 });
