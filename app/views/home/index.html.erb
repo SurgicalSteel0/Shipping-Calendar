@@ -1,69 +1,266 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>Shipping Calendar</title>
+
+<head>
+    <title>Shipping Calendar</title>
+
+
+    <style>
+        .table-calendar {
+            table-layout: fixed;
+            width: 100%
+        }
         
+        .table-calendar tbody tr {
+            height: 125px;
+            max-height: 125px;
+        }
+        
+        .table-calendar tbody tr td {}
+        
+        .table-calendar thead tr th {
+            text-align: center;
+        }
+        
+        .calendar-day-today {
+            border: 2px solid #337AB7;
+            border-radius: 3px;
+        }
+        
+        .calendar-day-blank {
+            background-color: #F9F9F9;
+            color: #F9F9F9;
+            pointer-events: none;
+        }
+    </style>
 
-        <style>
+    <script>
+        $(document).ready(function() {
 
-            .table-calendar {
-                table-layout: fixed;
-                width: 100%
+            // localStorage.calendar = "";
+
+            if (localStorage.calendar) {
+                $("#calendarMain").html(localStorage.calendar);
+            } else {
+                setCal();
             }
-            .table-calendar tbody tr {
-                height: 125px;
-                max-height: 125px;
-            }
-            .table-calendar tbody tr td {
-
-            }
-            .table-calendar thead tr th {
-                text-align: center;
-            }
-            .calendar-day-today {
-                border: 2px solid #337AB7;
-                border-radius: 3px;
-            }
-            .calendar-day-blank {
-                background-color: #F9F9F9;
-                color: #F9F9F9;
-                pointer-events: none;
-            }
-
-        </style>
-
-        <script>
-
-            var day;
-
-            function addShipment(tdObject) {
-                day = tdObject;
-                $("#shipmentModal").modal("show");
-            }
-
-            function submitShipment() {
-                var shipmentName = $("[name='shipmentName']").val();
-                console.log(shipmentName);
-                
-                var shipment = document.createElement("span");
-                shipment.className = "label label-default";
-                shipment.innerHTML = shipmentName;
-                
-                day.appendChild(shipment);
-                
-                $("#shipmentModal").modal("hide");
-                
-                $("[name='shipmentName']").val("");
-            }
-
-        </script>
-
-    </head>
-    <body>
-
-        <% if current_user %>
             
-            <div class="container-fluid">
+
+        });
+
+        var day;
+
+        function addShipment(tdObject) {
+            day = tdObject;
+            $("#shipmentModal").modal("show");
+        }
+
+        function submitShipment() {
+            var shipmentName = $("[name='shipmentName']").val();
+            console.log(shipmentName);
+
+            var shipment = document.createElement("span");
+            shipment.className = "label label-default";
+            shipment.innerHTML = shipmentName;
+
+            day.appendChild(shipment);
+
+            $("#shipmentModal").modal("hide");
+
+            $("[name='shipmentName']").val("");
+
+            localStorage.calendar = $("#calendarMain").html();
+
+        }
+
+
+
+        function getTime() {
+            // initialize time-related variables with current time settings
+            var now = new Date()
+            var hour = now.getHours()
+            var minute = now.getMinutes()
+            now = null
+            var ampm = ""
+
+            // validate hour values and set value of ampm
+            if (hour >= 12) {
+                hour -= 12
+                ampm = "PM"
+            }
+            else
+                ampm = "AM"
+            hour = (hour == 0) ? 12 : hour
+
+            // add zero digit to a one digit minute
+            if (minute < 10)
+                minute = "0" + minute // do not parse this number!
+
+            // return time string
+            return hour + ":" + minute + " " + ampm
+        }
+
+        function leapYear(year) {
+            if (year % 4 == 0) // basic rule
+                return true // is leap year
+                /* else */ // else not needed when statement is "return"
+            return false // is not leap year
+        }
+
+        function getDays(month, year) {
+            // create array to hold number of days in each month
+            var ar = new Array(12)
+            ar[0] = 31 // January
+            ar[1] = (leapYear(year)) ? 29 : 28 // February
+            ar[2] = 31 // March
+            ar[3] = 30 // April
+            ar[4] = 31 // May
+            ar[5] = 30 // June
+            ar[6] = 31 // July
+            ar[7] = 31 // August
+            ar[8] = 30 // September
+            ar[9] = 31 // October
+            ar[10] = 30 // November
+            ar[11] = 31 // December
+
+            // return number of days in the specified month (parameter)
+            return ar[month]
+        }
+
+        function getMonthName(month) {
+            // create array to hold name of each month
+            var ar = new Array(12)
+            ar[0] = "January"
+            ar[1] = "February"
+            ar[2] = "March"
+            ar[3] = "April"
+            ar[4] = "May"
+            ar[5] = "June"
+            ar[6] = "July"
+            ar[7] = "August"
+            ar[8] = "September"
+            ar[9] = "October"
+            ar[10] = "November"
+            ar[11] = "December"
+
+            // return name of specified month (parameter)
+            return ar[month]
+        }
+
+        function setCal() {
+            // standard time attributes
+            var now = new Date()
+            var year = now.getYear()
+            if (year < 1000)
+                year += 1900
+            var month = now.getMonth()
+            var monthName = getMonthName(month)
+            var date = now.getDate()
+            now = null
+
+            // create instance of first day of month, and extract the day on which it occurs
+            var firstDayInstance = new Date(year, month, 1)
+            var firstDay = firstDayInstance.getDay()
+            firstDayInstance = null
+
+            // number of days in current month
+            var days = getDays(month, year)
+
+            // call function to draw calendar
+            drawCal(firstDay + 1, days, date, monthName, year)
+        }
+
+        function drawCal(firstDay, lastDate, date, monthName, year) {
+            // constant table settings
+            var headerHeight = 50 // height of the table's header cell
+            var border = 2 // 3D height of table's border
+            var cellspacing = 4 // width of table's border
+            var headerColor = "midnightblue" // color of table's header
+            var headerSize = "+3" // size of tables header font
+            var colWidth = 60 // width of columns in table
+            var dayCellHeight = 25 // height of cells containing days of the week
+            var dayColor = "darkblue" // color of font representing week days
+            var cellHeight = 40 // height of cells representing dates in the calendar
+            var todayColor = "red" // color specifying today's date in the calendar
+            var timeColor = "purple" // color of font representing current time
+
+            // create basic table structure
+            var text = "" // initialize accumulative variable to empty string
+            text += '<CENTER>'
+            text += '<TABLE  class="table table-calendar table-condensed table-bordered">' // table settings
+
+            $("#calendarCurrentInfo").html(monthName + ' ' + year);
+
+            // variables to hold constant settings
+            var openCol = '<TD>'
+            openCol += '<FONT COLOR="' + dayColor + '">'
+            var closeCol = '</FONT></TD>'
+
+            // create array of abbreviated day names
+            var weekDay = new Array(7)
+            weekDay[0] = "Sun"
+            weekDay[1] = "Mon"
+            weekDay[2] = "Tues"
+            weekDay[3] = "Wed"
+            weekDay[4] = "Thu"
+            weekDay[5] = "Fri"
+            weekDay[6] = "Sat"
+
+            // create first row of table to set column width and specify week day
+            text += '<thead align="center"><TR>'
+            for (var dayNum = 0; dayNum < 7; ++dayNum) {
+                text += openCol + weekDay[dayNum] + closeCol
+            }
+            text += '</TR></thead>'
+
+            // declaration and initialization of two variables to help with tables
+            var digit = 1
+            var curCell = 1
+
+            for (var row = 1; row <= Math.ceil((lastDate + firstDay - 1) / 7); ++row) {
+                text += '<TR ALIGN="right" VALIGN="top">'
+                for (var col = 1; col <= 7; ++col) {
+                    if (digit > lastDate)
+                        break
+                    if (curCell < firstDay) {
+                        text += '<TD></TD>';
+                        curCell++
+                    }
+                    else {
+                        if (digit == date) { // current cell represent today's date
+                            text += '<TD>'
+                            text += '<FONT COLOR="' + todayColor + '">'
+                            text += digit
+                            text += '</FONT><BR>'
+                            text += '<FONT COLOR="' + timeColor + '" SIZE=2>'
+                            text += '<CENTER>' + getTime() + '</CENTER>'
+                            text += '</FONT>'
+                            text += '</TD>'
+                        }
+                        else
+                            text += '<TD onclick="addShipment(this)" HEIGHT=' + cellHeight + '><div>' + digit + '</div></TD>'
+                        digit++
+                    }
+                }
+                text += '</TR>'
+            }
+
+            // close all basic table tags
+            text += '</TABLE>'
+            text += '</CENTER>'
+
+            // print accumulative HTML string
+            $("#calendarMain").html(text);
+        }
+    </script>
+
+</head>
+
+<body>
+
+    <% if current_user %>
+
+        <div class="container-fluid">
 
             <h3>Signed in as <%= current_user.name %> | <%= link_to "Logout", '/auth/logout' %></h3>
 
@@ -73,187 +270,9 @@
                         <div class="panel-heading">
                             <span class="glyphicon glyphicon-calendar"></span> <span id="calendarCurrentInfo"></span>
                         </div>
-                        <div class="panel-body">
+                        <div id="calendarMain" class="panel-body">
 
-                            <script>
 
-                                setCal();
-
-                                function getTime() {
-                                    // initialize time-related variables with current time settings
-                                    var now = new Date()
-                                    var hour = now.getHours()
-                                    var minute = now.getMinutes()
-                                    now = null
-                                    var ampm = ""
-
-                                    // validate hour values and set value of ampm
-                                    if (hour >= 12) {
-                                        hour -= 12
-                                        ampm = "PM"
-                                    } else
-                                        ampm = "AM"
-                                    hour = (hour == 0) ? 12 : hour
-
-                                    // add zero digit to a one digit minute
-                                    if (minute < 10)
-                                        minute = "0" + minute // do not parse this number!
-
-                                    // return time string
-                                    return hour + ":" + minute + " " + ampm
-                                }
-
-                                function leapYear(year) {
-                                    if (year % 4 == 0) // basic rule
-                                        return true // is leap year
-                                    /* else */ // else not needed when statement is "return"
-                                    return false // is not leap year
-                                }
-
-                                function getDays(month, year) {
-                                    // create array to hold number of days in each month
-                                    var ar = new Array(12)
-                                    ar[0] = 31 // January
-                                    ar[1] = (leapYear(year)) ? 29 : 28 // February
-                                    ar[2] = 31 // March
-                                    ar[3] = 30 // April
-                                    ar[4] = 31 // May
-                                    ar[5] = 30 // June
-                                    ar[6] = 31 // July
-                                    ar[7] = 31 // August
-                                    ar[8] = 30 // September
-                                    ar[9] = 31 // October
-                                    ar[10] = 30 // November
-                                    ar[11] = 31 // December
-
-                                    // return number of days in the specified month (parameter)
-                                    return ar[month]
-                                }
-
-                                function getMonthName(month) {
-                                    // create array to hold name of each month
-                                    var ar = new Array(12)
-                                    ar[0] = "January"
-                                    ar[1] = "February"
-                                    ar[2] = "March"
-                                    ar[3] = "April"
-                                    ar[4] = "May"
-                                    ar[5] = "June"
-                                    ar[6] = "July"
-                                    ar[7] = "August"
-                                    ar[8] = "September"
-                                    ar[9] = "October"
-                                    ar[10] = "November"
-                                    ar[11] = "December"
-
-                                    // return name of specified month (parameter)
-                                    return ar[month]
-                                }
-
-                                function setCal() {
-                                    // standard time attributes
-                                    var now = new Date()
-                                    var year = now.getYear()
-                                    if (year < 1000)
-                                        year += 1900
-                                    var month = now.getMonth()
-                                    var monthName = getMonthName(month)
-                                    var date = now.getDate()
-                                    now = null
-
-                                    // create instance of first day of month, and extract the day on which it occurs
-                                    var firstDayInstance = new Date(year, month, 1)
-                                    var firstDay = firstDayInstance.getDay()
-                                    firstDayInstance = null
-
-                                    // number of days in current month
-                                    var days = getDays(month, year)
-
-                                    // call function to draw calendar
-                                    drawCal(firstDay + 1, days, date, monthName, year)
-                                }
-
-                                function drawCal(firstDay, lastDate, date, monthName, year) {
-                                    // constant table settings
-                                    var headerHeight = 50 // height of the table's header cell
-                                    var border = 2 // 3D height of table's border
-                                    var cellspacing = 4 // width of table's border
-                                    var headerColor = "midnightblue" // color of table's header
-                                    var headerSize = "+3" // size of tables header font
-                                    var colWidth = 60 // width of columns in table
-                                    var dayCellHeight = 25 // height of cells containing days of the week
-                                    var dayColor = "darkblue" // color of font representing week days
-                                    var cellHeight = 40 // height of cells representing dates in the calendar
-                                    var todayColor = "red" // color specifying today's date in the calendar
-                                    var timeColor = "purple" // color of font representing current time
-
-                                    // create basic table structure
-                                    var text = "" // initialize accumulative variable to empty string
-                                    text += '<CENTER>'
-                                    text += '<TABLE  class="table table-calendar table-condensed table-bordered">' // table settings
-
-                                    $("#calendarCurrentInfo").html(monthName + ' ' + year);
-
-                                    // variables to hold constant settings
-                                    var openCol = '<TD>'
-                                    openCol += '<FONT COLOR="' + dayColor + '">'
-                                    var closeCol = '</FONT></TD>'
-
-                                    // create array of abbreviated day names
-                                    var weekDay = new Array(7)
-                                    weekDay[0] = "Sun"
-                                    weekDay[1] = "Mon"
-                                    weekDay[2] = "Tues"
-                                    weekDay[3] = "Wed"
-                                    weekDay[4] = "Thu"
-                                    weekDay[5] = "Fri"
-                                    weekDay[6] = "Sat"
-
-                                    // create first row of table to set column width and specify week day
-                                    text += '<thead align="center"><TR>'
-                                    for (var dayNum = 0; dayNum < 7; ++dayNum) {
-                                        text += openCol + weekDay[dayNum] + closeCol
-                                    }
-                                    text += '</TR></thead>'
-
-                                    // declaration and initialization of two variables to help with tables
-                                    var digit = 1
-                                    var curCell = 1
-
-                                    for (var row = 1; row <= Math.ceil((lastDate + firstDay - 1) / 7); ++row) {
-                                        text += '<TR ALIGN="right" VALIGN="top">'
-                                        for (var col = 1; col <= 7; ++col) {
-                                            if (digit > lastDate)
-                                                break
-                                            if (curCell < firstDay) {
-                                                text += '<TD></TD>';
-                                                curCell++
-                                            } else {
-                                                if (digit == date) { // current cell represent today's date
-                                                    text += '<TD>'
-                                                    text += '<FONT COLOR="' + todayColor + '">'
-                                                    text += digit
-                                                    text += '</FONT><BR>'
-                                                    text += '<FONT COLOR="' + timeColor + '" SIZE=2>'
-                                                    text += '<CENTER>' + getTime() + '</CENTER>'
-                                                    text += '</FONT>'
-                                                    text += '</TD>'
-                                                } else
-                                                    text += '<TD onclick="addShipment(this)" HEIGHT=' + cellHeight + '><div>' + digit + '</div></TD>'
-                                                digit++
-                                            }
-                                        }
-                                        text += '</TR>'
-                                    }
-
-                                    // close all basic table tags
-                                    text += '</TABLE>'
-                                    text += '</CENTER>'
-
-                                    // print accumulative HTML string
-                                    document.write(text)
-                                }
-                            </script>
 
                         </div>
                         <div class="panel-footer">
@@ -289,14 +308,15 @@
                 </div>
             </div>
         </div>
-            
-            
+
+
         <% else %>
-        <h3>
+            <h3>
             You need to be logged in to view this page. <%= link_to 'Login', '/auth/login' %> | <%= link_to 'Signup', '/signup' %>
         </h3>
-            
-        <% end %>
 
-    </body>
+            <% end %>
+
+</body>
+
 </html>
